@@ -1,0 +1,206 @@
+########### Linux Storage AWS EBS, EFS ##############
+
+
+✅ 1. Fully Managed & Scalable
+No capacity planning needed — it automatically grows and shrinks as you add or delete files.
+
+Supports petabyte-scale storage.
+
+✅ 2. Shared Access
+Multiple EC2 instances (even in different Availability Zones) can simultaneously access the same file system.
+
+Perfect for web farms, container clusters, or shared media/content directories.
+
+✅ 3. Standard File System Interface
+Supports POSIX-compliant file operations: read(), write(), chmod(), etc.
+
+Works with Linux EC2 instances without needing application changes.
+
+✅ 4. High Availability & Durability
+Automatically replicates data across multiple Availability Zones (AZs) in a region.
+
+Built for 99.999999999% (11 9's) durability.
+
+
+
+
+############### Ec2-1 #########################
+
+sudo yum install -y amazon-efs-utils
+
+
+sudo mkdir -p /mnt/efs        #sudo mkdir -p /mnt/efs
+
+
+sudo mount -t efs fs-03d767529b5ccfd9d:/ /mnt/efs  #Mount the EFS filesystem
+
+
+
+df -h | grep efs
+
+
+cd /mnt/efs
+
+sudo touch testfile.txt
+
+ls -l
+
+################# EC2-2 ###########################
+
+sudo yum install -y amazon-efs-utils
+
+
+sudo mkdir -p /mnt/efs #sudo mkdir -p /mnt/efs
+
+
+
+cd /mnt/efs
+
+la 
+
+
+####################  EBS vs EFS ##################
+
+
+| Feature          | **Amazon EFS**                                          | **Amazon EBS**                                        |
+| ---------------- | ------------------------------------------------------- | ----------------------------------------------------- |
+| **Type**         | File Storage (shared filesystem)                        | Block Storage (like a virtual disk)                   |
+| **Mounts to**    | Multiple EC2s at once (shared access)                   | Only one EC2 at a time (except Multi-Attach for some) |
+| **Protocol**     | NFSv4                                                   | iSCSI                                                 |
+| **Scalability**  | Auto-scales to petabytes                                | Fixed size (must resize manually)                     |
+| **Use Cases**    | Shared file systems, web/app servers, container storage | Databases, boot volumes, applications with high IOPS  |
+| **Performance**  | Good for throughput & parallel access                   | Better for low-latency, high-IOPS workloads           |
+| **Availability** | Multi-AZ (by default)                                   | Single-AZ (Multi-AZ via replication or snapshots)     |
+| **Backup**       | AWS Backup, snapshots                                   | Snapshots, lifecycle manager                          |
+| **Latency**      | Higher than EBS (network filesystem)                    | Lower (directly attached)                             |
+| **Pricing**      | Pay-per-use (GB/month), tiered                          | Pay for provisioned size (GB/month)                   |
+| **Access Type**  | Shared file system (multiple instances)                 | Exclusive disk (per EC2)                              |
+| **OS Support**   | Linux only                                              | Linux and Windows                                     |
+
+
+
+
+
+
+
+
+################ Common usecase #############
+
+
+
+Shared Web Hosting (Web Servers Behind Load Balancer)
+Use Case: Multiple EC2 web servers serving a single website (e.g., Apache, Nginx) behind an ELB.
+
+Problem: User uploads (e.g., images, PDFs) saved on one instance must be instantly visible on others.
+
+Solution: Mount a shared EFS volume on all EC2s → all uploads and logs are stored in one place.
+
+✅ Ensures consistency across all servers
+
+✅ No need to sync files manually
+
+
+
+
+
+
+############ EBS #################
+
+
+lsblk-  List Block Devices
+
+→ Lists all attached disks and partitions (very useful for EBS).
+
+Your current lsblk output shows only one main volume xvda of size 8G with partitions mounted at / and /boot/efi.
+
+If you recently increased the EBS volume size in AWS Console but don’t see the updated size here, it means the OS has not detected the new volume size yet.
+
+
+
+df -h  ###df -h — Disk Free (filesystem usage)
+→ Shows disk usage for all mounted filesystems in human-readable format.
+
+
+mkfs -t ext4 /dev/xvdf
+
+
+mkfs: The command itself, which stands for "make file system".
+-t ext4: The option -t specifies the type of file system to create. In this case, it's ext4, which is a popular file system type used in Linux.
+/dev/xvdf: The device on which to create the file system. In this case, it's a block device named xvdf
+
+
+sudo mount /dev/xvdf /mnt/data
+→ Mounts the volume to a directory.
+
+
+sudo umount /mnt/data
+→ Unmounts a mounted volume.
+
+
+file -s /dev/xvdf
+→ Checks if the disk is already formatted.
+
+
+du -sh /mnt/data
+→ Shows total space used by files in a directory.
+
+mount
+→ Lists all currently mounted filesystems.
+
+
+sudo growpart /dev/xvda 1
+--> You can increase volume size anytime — no downtime required.
+
+
+
+-------------------------------------EBS Storage additional volume attach process ----------------------------------------------------------------
+
+#### If i create new volume and attach to ec2 instance how to update the file system to use that created new volume? ######### 
+
+Create a new additional volume and attach to ec2 then connect to server run below commands 
+
+sudo mkfs.ext4 /dev/xvdb         #Format the volume (assuming the volume is /dev/sdb and you want to use ext4 file system  here xvdb=sdb  s = xv) 
+
+
+sudo mkdir /mnt/data            # Create mountpoint directory 
+
+sudo mount /dev/xvdb /mnt/data  #mount the volume
+
+
+##After you can test Add Content to the Mounted Volume
+
+1. Switch to the mount directory
+cd /mnt/data
+
+2. Create a test file
+sudo touch testfile.txt
+
+3. Write content to the file
+echo "This is a test file on xvdb mounted volume." | sudo tee testfile.txt
+
+
+##### Use Case--> When to Use an Additional Volume (EBS)
+
+1. Separate Application Data
+Store app files, logs, uploads, DB files, etc., on a dedicated volume.
+
+Keeps data safe even if the root volume (OS) is corrupted or replaced.
+
+2. Need More Storage Space
+When the root volume (/dev/xvda) is full or insufficient for your needs.
+
+3. Performance Isolation
+Separate volumes can be optimized with different IOPS (e.g., gp3, io1).
+
+Useful for databases, caching, or high-throughput logging.
+
+4. Data Persistence Across Instance Lifecycle
+If you stop/terminate an instance, you can detach the additional volume and attach it to another instance.
+
+Helpful for backups, migration, or recovery.
+
+ -- volume resize -----------------
+
+sudo growpart /dev/xvda 1   Note:This expands partition 1 (xvda1) to fill the newly resized 10 GB EBS volume.
+
+

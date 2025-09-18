@@ -1,0 +1,127 @@
+  ################ YUM ##################
+
+1.#List all installed packages
+
+yum list installed
+
+2.#Search for a package
+yum search <keyword>
+Example:
+yum search nginx
+
+3.yum list available git # to check git package is there or not if yes then yum install git -y 
+
+
+| Task                            | Command                                      |
+| ------------------------------- | -------------------------------------------- |
+| List enabled repos              | `yum repolist`                               |
+| List all repos                  | `yum repolist all`                           |
+| View repo config files          | `cat /etc/yum.repos.d/*.repo`                |
+| Find repo for installed package | `yum list installed <pkg>` / `rpm -qi <pkg>` |
+| View repo cache location        | `ls /var/cache/yum/`                         |
+
+
+
+
+================== Networking ======================
+
+
+
+curl ifconfig.me #to check public ip
+
+hostname -I      # to check private ip
+
+
+ss -tuln         # to check active ports 
+ss -tuln
+is used in Linux to display active network sockets, specifically showing the listening ports on your system.
+
+####
+telnet <host> <port>
+This command is used to test connectivity to a specific port on a target host.
+
+✅ Example:
+
+telnet 10.0.15.201 22
+Tries to connect to IP 10.0.15.201 on port 22 (SSH).
+
+If it connects: the port is open and a service is listening.
+
+If it fails: the port is closed, firewalled, or not listening.
+
+🔹 Simple and useful for quick port tests.
+🔸 Not meant for scanning multiple ports.
+
+telnet <host> <port> #Using telnet to test specific port
+
+
+####
+🔍 nmap <target-ip>
+nmap (Network Mapper) is a powerful tool to scan open ports, identify services, and even detect OS versions.
+
+🔎 Example 1: Basic Port Scan
+
+nmap 10.0.15.201
+Scans top 1000 common ports.
+
+Fast and lightweight.
+
+🔎 Example 2: Scan All 65535 Ports
+
+nmap -p- 10.0.15.201
+What it does:
+-p- means scan ALL ports from 1 to 65535 (full range).
+
+Very thorough but takes longer.
+
+Why it's used:
+To find all open ports, even uncommon or custom ones.
+
+Useful for security auditing, troubleshooting, or penetration testing.
+
+
+nmap <target-ip> #Scan Common Ports:
+
+ex: Scan All 65535 Ports:
+nmap -p- <target-ip>
+
+
+
+
+
+Example:
+Let’s say you have this:
+
+A Flask app listening on 127.0.0.1:5000
+
+SSH open on 0.0.0.0:22
+
+ss -tuln will show:
+
+
+LISTEN 0 128 127.0.0.1:5000 ...
+LISTEN 0 128 0.0.0.0:22 ...
+nmap <private-ip> will only show:
+
+
+PORT     STATE SERVICE
+22/tcp   open  ssh
+Why?
+
+Port 5000 is not bound to your private IP, so nmap cannot see it.
+
+
+ex: Differences ss -tuln vs nmap
+
+Feature	                ss -tuln	                                              nmap (Network Mapper)
+Purpose	     View local listening ports on your machine	         Scan a target system (local or remote) for open ports
+
+
+
+
+###
+
+What is nslookup?
+nslookup (Name Server Lookup) is a command-line tool used to query DNS (Domain Name System) to get domain name or IP address mapping.
+
+ex: nslookup google.com

@@ -1,0 +1,25 @@
+=================== User management ===============
+
+useradd <username>
+
+passwd username
+
+usermod -aG root  user
+
+id root 
+
+id user
+
+cat /etc/passwd #shows list of users 
+cat /etc/group  #shows list of groups
+
+vi /etc/sudoers    #add user into sudoers file 
+
+vi /etc/sudoers.d/90-cloud-init-users   # ec2-user is init user if you want to check permissions use this path
+
+
+vi /etc/ssh/sshd_config  -- to enable password authentication 
+cat etc/ssh/sshd_config  ---to read it.
+service sshd reload or restart –to restart service 
+
+chown userA:userA file1  #change ownership

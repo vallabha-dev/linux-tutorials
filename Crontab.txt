@@ -1,0 +1,82 @@
+What is crontab?
+crontab stands for "cron table", and it's a command-line utility used to schedule repetitive tasks in Unix/Linux systems.
+
+Key Concepts:
+Term	Description
+cron	A background daemon/service that runs scheduled jobs.
+crontab	A file (and command) that defines the schedule of tasks for cron.
+cron job	A scheduled command or script to run at specified times.
+
+📁 Crontab File Format:
+Each line in a crontab represents one job and follows this pattern:
+
+* * * * * /path/to/command
+│ │ │ │ │
+│ │ │ │ └── Day of the week (0-7) (0 or 7 = Sunday)
+│ │ │ └──── Month (1 - 12)
+│ │ └────── Day of the month (1 - 31)
+│ └──────── Hour (0 - 23)
+└────────── Minute (0 - 59)
+🧪 Example:
+Run a Python script every day at 1:30 AM:
+
+
+30 1 * * * /usr/bin/python3 /opt/scripts/myscript.py
+📌 Related Commands:
+crontab -e → Edit the current user’s cron jobs
+
+crontab -l → List current cron jobs
+
+crontab -r → Remove all cron jobs for current user
+
+
+
+### Example use case ###
+
+🔧 How to Set It Up
+Create the directory and script file:
+
+sudo mkdir -p /opt/scripts
+sudo vi /opt/scripts/myscript.py
+
+Paste the script below into the file.
+
+#!/usr/bin/env python3
+
+from datetime import datetime
+
+# Log file location
+log_file = "/opt/scripts/output.log"
+
+# Get current date and time
+now = datetime.now()
+timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+
+# Write timestamp to the log file
+with open(log_file, "a") as file:
+    file.write(f"Cron job ran at {timestamp}\n")
+
+
+
+#Make the script executable:
+sudo chmod +x /opt/scripts/myscript.py
+python3 /opt/scripts/myscript.py
+Test it manually:
+
+check the logs
+cat /opt/scripts/output.log
+
+Set up the cron job run below command
+
+crontab -e #if command not found install crontab
+sudo yum install cronie -y
+sudo systemctl enable crond
+sudo systemctl start crond
+
+then run again--> crontab -e
+Add the following line to run it every 5 minutes:
+*/5 * * * * /opt/scripts/myscript.py
+
+you can see every 5 minutes you'll see the response 
+cat /opt/scripts/output.log
+
